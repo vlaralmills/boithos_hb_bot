@@ -2,3 +2,4 @@ flask
 flask-cors
 openai
 sentence-transformers
+python-dotenv
