@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Αίτηση Μικρών Εργασιών ΔΕΔΔΗΕ</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .form-container {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .preview-container {
+            flex: 2;
+            min-width: 400px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0047ab;
+            border-bottom: 2px solid #0047ab;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        .form-row > div {
+            flex: 1;
+        }
+        .checkbox-group {
+            margin-top: 20px;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: normal;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        .checkbox-group input[type="text"] {
+            width: 70px;
+            margin: 0 10px;
+        }
+        button {
+            background-color: #0047ab;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #003380;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #canvas-container {
+            border: 1px solid #ccc;
+            overflow: auto;
+            max-height: 800px;
+            margin-top: 15px;
+        }
+        .template-selector {
+            margin-bottom: 20px;
+        }
+        .additional-fields {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <h1>Αίτηση Μικρών Εργασιών ΔΕΔΔΗΕ</h1>
+
+    <div class="container">
+        <div class="form-container">
+            <div class="template-selector">
+                <label for="template">Επιλογή Προτύπου:</label>
+                <select id="template">
+                    <option value="ΠΡΟΤΥΠΟ Νο1">ΠΡΟΤΥΠΟ Νο1</option>
+                </select>
+            </div>
+
+            <h3>Στοιχεία Αιτούντος</h3>
+            <div class="form-group">
+                <label for="eponymo">Επώνυμο:</label>
+                <input type="text" id="eponymo">
+            </div>
+            <div class="form-group">
+                <label for="onoma">Όνομα:</label>
+                <input type="text" id="onoma">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="adt">ΑΔΤ:</label>
+                    <input type="text" id="adt">
+                </div>
+                <div class="form-group">
+                    <label for="afm">ΑΦΜ:</label>
+                    <input type="text" id="afm">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="arkatanaloti">Αριθμός Καταναλωτή:</label>
+                <input type="text" id="arkatanaloti">
+            </div>
+            <div class="form-group">
+                <label for="tilefona">Τηλέφωνα:</label>
+                <input type="text" id="tilefona">
+            </div>
+            <div class="form-group">
+                <label for="dieuthinsi">Διεύθυνση:</label>
+                <input type="text" id="dieuthinsi">
+            </div>
+            <div class="form-group">
+                <label for="perioxi">Περιοχή:</label>
+                <input type="text" id="perioxi">
+            </div>
+            <div class="form-group">
+                <label for="poli">Πόλη/Ημερομηνία:</label>
+                <input type="text" id="poli">
+            </div>
+
+            <div class="checkbox-group">
+                <h3>Τύπος Εργασίας</h3>
+                <label>
+                    <input type="checkbox" id="metatopisi1"> Μετατόπιση Παροχής & Μετρητή
+                </label>
+                <label>
+                    <input type="checkbox" id="metatopisi2"> Μετατόπιση Παροχής
+                </label>
+                <label>
+                    <input type="checkbox" id="epayksisi"> Επαύξηση Ισχύος από 
+                    <input type="text" id="kva_from"> KVA σε 
+                    <input type="text" id="kva_to"> KVA με δέκτη ακουστικής συχνότητας 
+                    <select id="nai_oxi">
+                        <option value="ΝΑΙ">ΝΑΙ</option>
+                        <option value="ΟΧΙ">ΟΧΙ</option>
+                    </select>
+                </label>
+                <label>
+                    <input type="checkbox" id="diakopi"> Προσωρινή Διακοπή Ρεύματος
+                </label>
+                <label>
+                    <input type="checkbox" id="epanasyndesi"> Επανασύνδεση λόγω 
+                    <input type="text" id="epanasyndesi_reason">
+                </label>
+                <label>
+                    <input type="checkbox" id="allagi"> Αλλαγή από 
+                    <input type="text" id="allagi_from"> A σε 
+                    <input type="text" id="allagi_to"> A
+                </label>
+                <label>
+                    <input type="checkbox" id="allo"> Άλλο: 
+                    <input type="text" id="allo_reason">
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <div>
+                    <button id="preview-btn">Προεπισκόπηση</button>
+                    <button id="download-btn" disabled>Λήψη PDF</button>
+                </div>
+                <button id="reset-btn">Καθαρισμός Φόρμας</button>
+            </div>
+        </div>
+
+        <div class="preview-container">
+            <h3>Προεπισκόπηση Αίτησης</h3>
+            <div id="canvas-container"></div>
+        </div>
+    </div>
+
+<script>
+const { jsPDF } = window.jspdf;
+const pdfjsLib = window['pdfjs-dist/build/pdf'];
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
+
+let pdfDoc = null;
+let pdfPage = null;
+let pdfScale = 1.0;
+
+// Load templates from JSON
+const templatesData = [{"name":"ΠΡΟΤΥΠΟ Νο1","positions":{"eponymo":{"x":143,"y":145},"onoma":{"x":131,"y":164},"adt":{"x":122,"y":183},"afm":{"x":123,"y":202},"arkatanaloti":{"x":164,"y":221},"tilefona":{"x":152,"y":240},"dieuthinsi":{"x":184,"y":91},"perioxi":{"x":183,"y":117},"poli":{"x":156,"y":259},"metatopisi1":{"x":330,"y":149},"metatopisi2":{"x":330,"y":163},"epayksisi":{"x":330,"y":175},"kva_from":{"x":443,"y":173},"kva_to":{"x":490,"y":173},"dektis":{"x":483,"y":188},"nai_oxi":{"x":483,"y":188},"diakopi":{"x":330,"y":203},"epanasyndesi":{"x":330,"y":214},"epanasyndesi_reason":{"x":440,"y":210},"allagi":{"x":330,"y":225},"allagi_from":{"x":410,"y":225},"allagi_to":{"x":475,"y":225},"allo":{"x":330,"y":240},"allo_reason":{"x":373,"y":238}}}];
+
+let currentTemplate = templatesData[0];
+
+// Προσπάθεια φόρτωσης του PDF αρχείου
+window.addEventListener('DOMContentLoaded', () => {
+    // Προσπάθεια φόρτωσης πρώτα με ελληνικό "Ε" (korrekt)
+    loadPdf('eme.pdf').catch(error => {
+        console.log('Failed to load with Greek E, trying Latin E');
+        // Αν αποτύχει, προσπάθεια με λατινικό "E"
+        loadPdf('eme.pdf').catch(error => {
+            console.error('Both PDF loading attempts failed:', error);
+            document.getElementById('canvas-container').innerHTML = 
+                '<p style="color: red;">Σφάλμα φόρτωσης PDF. Βεβαιωθείτε ότι το αρχείο PDF είναι διαθέσιμο (είτε ως "Ε597-21.pdf" είτε ως "E597-21.pdf").</p>';
+        });
+    });
+});
+
+// Συνάρτηση φόρτωσης PDF
+function loadPdf(filename) {
+    return fetch(filename)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`PDF file ${filename} not found`);
+            }
+            return response.arrayBuffer();
+        })
+        .then(data => {
+            return pdfjsLib.getDocument(new Uint8Array(data)).promise;
+        })
+        .then(pdf => {
+            console.log(`PDF ${filename} loaded successfully`);
+            pdfDoc = pdf;
+            return pdf.getPage(1);
+        })
+        .then(page => {
+            pdfPage = page;
+            renderPage();
+        });
+}
+
+// Template selector change handler
+document.getElementById('template').addEventListener('change', (e) => {
+    const selectedTemplate = e.target.value;
+    currentTemplate = templatesData.find(t => t.name === selectedTemplate);
+    if (pdfPage) renderPage();
+});
+
+function renderPage(preview = false) {
+    const container = document.getElementById('canvas-container');
+    container.innerHTML = '';
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    container.appendChild(canvas);
+
+    if (!pdfPage) {
+        ctx.font = '16px Arial';
+        ctx.fillStyle = 'red';
+        ctx.fillText('PDF page not loaded', 50, 50);
+        return;
+    }
+
+    const viewport = pdfPage.getViewport({ scale: pdfScale });
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    pdfPage.render({canvasContext: ctx, viewport: viewport}).promise.then(() => {
+        if (preview) addFormData(ctx);
+    });
+}
+
+function addFormData(ctx) {
+    ctx.font = '12px Arial';
+    ctx.fillStyle = 'black';
+    
+    // Personal information fields
+    const textFields = ['eponymo', 'onoma', 'adt', 'afm', 'arkatanaloti', 'tilefona', 'dieuthinsi', 'perioxi', 'poli'];
+    textFields.forEach(field => {
+        const value = document.getElementById(field).value || '';
+        if (currentTemplate.positions[field] && value) {
+            ctx.fillText(value, currentTemplate.positions[field].x, currentTemplate.positions[field].y);
+        }
+    });
+
+    // Checkboxes
+    const checkboxes = ['metatopisi1', 'metatopisi2', 'epayksisi', 'diakopi', 'epanasyndesi', 'allagi', 'allo'];
+    checkboxes.forEach(field => {
+        if (document.getElementById(field).checked && currentTemplate.positions[field]) {
+            ctx.fillText('X', currentTemplate.positions[field].x, currentTemplate.positions[field].y);
+        }
+    });
+
+    // Special fields with additional inputs
+    if (document.getElementById('epayksisi').checked) {
+        const kvaFrom = document.getElementById('kva_from').value || '';
+        const kvaTo = document.getElementById('kva_to').value || '';
+        const naiOxi = document.getElementById('nai_oxi').value || '';
+        
+        if (kvaFrom && currentTemplate.positions.kva_from) {
+            ctx.fillText(kvaFrom, currentTemplate.positions.kva_from.x, currentTemplate.positions.kva_from.y);
+        }
+        if (kvaTo && currentTemplate.positions.kva_to) {
+            ctx.fillText(kvaTo, currentTemplate.positions.kva_to.x, currentTemplate.positions.kva_to.y);
+        }
+        if (naiOxi && currentTemplate.positions.nai_oxi) {
+            ctx.fillText(naiOxi, currentTemplate.positions.nai_oxi.x, currentTemplate.positions.nai_oxi.y);
+        }
+    }
+
+    if (document.getElementById('epanasyndesi').checked) {
+        const reason = document.getElementById('epanasyndesi_reason').value || '';
+        if (reason && currentTemplate.positions.epanasyndesi_reason) {
+            ctx.fillText(reason, currentTemplate.positions.epanasyndesi_reason.x, currentTemplate.positions.epanasyndesi_reason.y);
+        }
+    }
+
+    if (document.getElementById('allagi').checked) {
+        const from = document.getElementById('allagi_from').value || '';
+        const to = document.getElementById('allagi_to').value || '';
+        
+        if (from && currentTemplate.positions.allagi_from) {
+            ctx.fillText(from, currentTemplate.positions.allagi_from.x, currentTemplate.positions.allagi_from.y);
+        }
+        if (to && currentTemplate.positions.allagi_to) {
+            ctx.fillText(to, currentTemplate.positions.allagi_to.x, currentTemplate.positions.allagi_to.y);
+        }
+    }
+
+    if (document.getElementById('allo').checked) {
+        const reason = document.getElementById('allo_reason').value || '';
+        if (reason && currentTemplate.positions.allo_reason) {
+            ctx.fillText(reason, currentTemplate.positions.allo_reason.x, currentTemplate.positions.allo_reason.y);
+        }
+    }
+}
+
+document.getElementById('preview-btn').addEventListener('click', () => {
+    renderPage(true);
+    document.getElementById('download-btn').disabled = false;
+});
+
+document.getElementById('download-btn').addEventListener('click', () => {
+    const canvas = document.querySelector('#canvas-container canvas');
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'pt',
+        format: [canvas.width, canvas.height]
+    });
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    
+    const eponymo = document.getElementById('eponymo').value.trim() || 'aitisi';
+    pdf.save(`aitisi_${eponymo}.pdf`);
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+    // Reset all text fields
+    const allFields = document.querySelectorAll('input[type="text"]');
+    allFields.forEach(field => {
+        field.value = '';
+    });
+    
+    // Reset all checkboxes
+    const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+    allCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // Reset select fields
+    document.getElementById('nai_oxi').value = 'ΝΑΙ';
+    
+    // Reset the preview
+    if (pdfPage) renderPage();
+    
+    // Disable download button
+    document.getElementById('download-btn').disabled = true;
+});
+</script>
+
+</body>
+</html>

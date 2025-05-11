@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Βοηθός Ηλεκτρολόγου ΗΒ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 {
+      color: #0047ab;
+      margin-bottom: 30px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #0047ab;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    button:hover {
+      background-color: #003380;
+    }
+    #chat-output {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #eef2f7;
+      border-radius: 8px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+    input[type="text"] {
+      padding: 8px;
+      font-size: 14px;
+      width: 60%;
+      margin-right: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Βοηθός Ηλεκτρολόγου ΗΒ</h1>
+    <button onclick="window.open('forma.html', '_blank')">Αίτηση 1</button>
+    <button onclick="alert('Η λειτουργία Αίτηση 2 δεν είναι ακόμα διαθέσιμη.')">Αίτηση 2</button>
+
+    <div style="margin-top: 30px;">
+      <input type="text" id="userInput" placeholder="Πληκτρολόγησε ερώτηση...">
+      <button onclick="askGPT()">Ρώτα GPT</button>
+      <button onclick="startVoiceInput()">🎤 Φωνητική Είσοδος</button>
+      <div id="chat-output"></div>
+      <div id="history-box" style="margin-top: 20px; text-align: left;">
+        <h3>Ιστορικό</h3>
+        <ul id="history-list" style="list-style: none; padding: 0;"></ul>
+     </div>
+
+    </div>
+  </div>
+
+  <script>
+    function askGPT() {
+      const question = document.getElementById('userInput').value;
+      if (!question.trim()) return;
+
+      document.getElementById('chat-output').innerText = '⏳ Περιμένω απάντηση...';
+
+      fetch('/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: question })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('chat-output').innerText = data.answer;
+        const historyItem = document.createElement("li");
+        historyItem.innerHTML = `<strong>Ερώτηση:</strong> ${question}<br><strong>Απάντηση:</strong> ${data.answer}<hr>`;
+        document.getElementById("history-list").prepend(historyItem);
+
+      })
+      .catch(err => {
+        document.getElementById('chat-output').innerText = 'Σφάλμα κατά την επικοινωνία με τον server.';
+        console.error(err);
+      });
+    }
+
+    function startVoiceInput() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'el-GR';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('userInput').value = transcript;
+        askGPT();
+      };
+
+      recognition.onerror = function(event) {
+        alert('Σφάλμα φωνητικής εισόδου: ' + event.error);
+      };
+    }
+  </script>
+</body>
+</html>
