@@ -1,75 +1,70 @@
 
 import os
-import json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from openai import OpenAI
-from sentence_transformers import SentenceTransformer, util
 from dotenv import load_dotenv
+import json
+from pathlib import Path
+
+
+
 load_dotenv()
-
-
 app = Flask(__name__)
 CORS(app)
 
-openai_api_key = os.getenv("OPENAI_API_KEY")
-openai = OpenAI(api_key=openai_api_key)
-model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-with open("qa_data.json", "r", encoding="utf-8") as f:
-    qa_pairs = json.load(f)
-    questions = [q["question"] for q in qa_pairs]
-    answers = [q["answer"] for q in qa_pairs]
-    question_embeddings = model.encode(questions, convert_to_tensor=True)
+HISTORY_FILE = "history.json"
 
-import datetime
+# Φόρτωση ιστορικού ή δημιουργία αν δεν υπάρχει
+if Path(HISTORY_FILE).exists():
+    with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+        history = json.load(f)
+else:
+    history = {}
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    user_question = request.json["question"]
-    user_embedding = model.encode(user_question, convert_to_tensor=True)
-    hits = util.semantic_search(user_embedding, question_embeddings, top_k=1)[0]
-    best_match = qa_pairs[hits[0]["corpus_id"]]
+    data = request.get_json()
+    user = request.remote_addr
+    question = data.get("question", "").strip()
 
-    prompt = f"Ερώτηση: {user_question}\nΓνωστή απάντηση: {best_match['answer']}\nΔώσε απάντηση:"
-    response = openai.chat.completions.create(
+    if not question:
+        return jsonify({"answer": "Δεν έλαβα ερώτηση."}), 400
+
+    messages = history.get(user, [])
+    messages.append({"role": "user", "content": question})
+
+    response = openai_client.chat.completions.create(
         model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}]
+        messages=messages
     )
-    final_answer = response.choices[0].message.content
+    answer = response.choices[0].message.content.strip()
+    messages.append({"role": "assistant", "content": answer})
+    history[user] = messages[-10:]  # Κρατάμε μόνο τα τελευταία 10
 
-    # --- αποθήκευση στο history.json
-    history_entry = {
-        "timestamp": datetime.datetime.now().isoformat(),
-        "question": user_question,
-        "answer": final_answer
-    }
-    try:
-        with open("history.json", "r", encoding="utf-8") as f:
-            history = json.load(f)
-    except FileNotFoundError:
-        history = []
-
-    history.append(history_entry)
-    with open("history.json", "w", encoding="utf-8") as f:
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump(history, f, ensure_ascii=False, indent=2)
 
-    return jsonify({"answer": final_answer})
+    return jsonify({"answer": answer})
 
+@app.route("/clear", methods=["POST"])
+def clear():
+    user = request.remote_addr
+    history[user] = []
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+    return jsonify({"status": "cleared"})
 
-from flask import send_from_directory
-
-@app.route("/")
-def serve_index():
+@app.route("/", methods=["GET"])
+def index():
     return send_from_directory(".", "index.html")
 
-@app.route("/forma.html")
-def serve_forma():
-    return send_from_directory(".", "forma.html")
-
-@app.route("/eme.pdf")
-def serve_pdf():
-    return send_from_directory(".", "eme.pdf")
+@app.route("/<path:path>", methods=["GET"])
+def serve_file(path):
+    return send_from_directory(".", path)
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)
